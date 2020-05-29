@@ -91,22 +91,31 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
 
-            {transactions.map(transaction => (
-              <tbody>
-                <tr>
-                  <td className="title">Computer</td>
-                  <td className="income">R$ 5.000,00</td>
-                  <td>Sell</td>
-                  <td>20/04/2020</td>
-                </tr>
-                <tr>
-                  <td className="title">Website Hosting</td>
-                  <td className="outcome">- R$ 1.000,00</td>
-                  <td>Hosting</td>
-                  <td>19/04/2020</td>
-                </tr>
-              </tbody>
-            ))}
+            {transactions.map(transaction => {
+              let signal = '';
+
+              if (transaction.type === 'outcome') {
+                signal = '- ';
+              }
+              return (
+                <tbody key={transaction.id}>
+                  <tr>
+                    <td className="title">{transaction.title}</td>
+                    <td className={transaction.type}>
+                      {/* {signal(transaction.type)} */}
+                      {signal}
+                      {formatValue(transaction.value)}
+                    </td>
+                    <td>{transaction.category.title}</td>
+                    <td>
+                      {Intl.DateTimeFormat('pt-BR').format(
+                        new Date(transaction.created_at),
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              );
+            })}
           </table>
         </TableContainer>
       </Container>
