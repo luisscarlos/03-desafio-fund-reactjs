@@ -24,9 +24,9 @@ interface Transaction {
 }
 
 interface Balance {
-  income: number;
-  outcome: number;
-  total: number;
+  income: string;
+  outcome: string;
+  total: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -37,14 +37,27 @@ const Dashboard: React.FC = () => {
     async function loadTransactions(): Promise<void> {
       const response = await api.get('/transactions');
 
-      // eslint-disable-next-line no-shadow
-      const { transactions, balance } = response.data;
+      // const { income, outcome, total } = response.data.balance;
 
-      setTransactions(transactions);
-      setBalance(balance);
+      // Formata o valor da transação para o tipo moeda R$
+      const transactionsFormatted = response.data.transactions.map(
+        (transaction: Transaction) => ({
+          ...transaction,
+          formattedValue: formatValue(transaction.value),
+          formattedDate: new Date(transaction.created_at).toLocaleDateString(
+            'pt-br',
+          ),
+        }),
+      );
 
-      console.log(transactions);
-      console.log(balance);
+      const balanceFormatted = {
+        income: formatValue(response.data.balance.income),
+        outcome: formatValue(response.data.balance.outcome),
+        total: formatValue(response.data.balance.total),
+      };
+
+      setTransactions(transactionsFormatted);
+      setBalance(balanceFormatted);
     }
 
     loadTransactions();
@@ -60,23 +73,21 @@ const Dashboard: React.FC = () => {
               <p>Entradas</p>
               <img src={income} alt="Income" />
             </header>
-            <h1 data-testid="balance-income">{formatValue(balance.income)}</h1>
+            <h1 data-testid="balance-income">{balance.income}</h1>
           </Card>
           <Card>
             <header>
               <p>Saídas</p>
               <img src={outcome} alt="Outcome" />
             </header>
-            <h1 data-testid="balance-outcome">
-              {formatValue(balance.outcome)}
-            </h1>
+            <h1 data-testid="balance-outcome">{balance.outcome}</h1>
           </Card>
           <Card total>
             <header>
               <p>Total</p>
               <img src={total} alt="Total" />
             </header>
-            <h1 data-testid="balance-total">{formatValue(balance.total)}</h1>
+            <h1 data-testid="balance-total">{balance.total}</h1>
           </Card>
         </CardContainer>
 
@@ -92,26 +103,16 @@ const Dashboard: React.FC = () => {
             </thead>
 
             {transactions.map(transaction => {
-              let signal = '';
-
-              if (transaction.type === 'outcome') {
-                signal = '- ';
-              }
               return (
                 <tbody key={transaction.id}>
                   <tr>
                     <td className="title">{transaction.title}</td>
                     <td className={transaction.type}>
-                      {/* {signal(transaction.type)} */}
-                      {signal}
+                      {transaction.type === 'outcome' && ' - '}
                       {formatValue(transaction.value)}
                     </td>
                     <td>{transaction.category.title}</td>
-                    <td>
-                      {Intl.DateTimeFormat('pt-BR').format(
-                        new Date(transaction.created_at),
-                      )}
-                    </td>
+                    <td>{transaction.formattedDate}</td>
                   </tr>
                 </tbody>
               );
